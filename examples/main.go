@@ -9,7 +9,7 @@ import (
 
 func main() {
 	cmd := command.New().Command("echo", "123")
-	bytes, err := cmd.CombinedOutput()
+	bytes, err := cmd.Output()
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -16,9 +16,9 @@ type Cli interface {
 // Command presents cli command
 type Command interface {
 
-	// CombinedOutput runs the command and returns its combined standard
+	// Output runs the command and returns its combined standard
 	// output and standard error.
-	CombinedOutput() ([]byte, error)
+	Output() ([]byte, error)
 
 	// OutputWithStdin runs the command and returns its combined standard
 	// output and standard error.
@@ -40,18 +40,18 @@ func New() Cli {
 // Command is part of the Interface interface.
 func (command *command) Command(cmd string, args ...string) Command {
 	cli := exec.Command(cmd, args...)
-	return &cmdWrapper{cli}
+	return &cmdWrapper{*cli}
 }
 
 type cmdWrapper struct {
-	*exec.Cmd
+	exec.Cmd
 }
 
 var _ Command = &cmdWrapper{}
 
-// CombinedOutput is part of the Command interface.
-func (cmd *cmdWrapper) CombinedOutput() ([]byte, error) {
-	return cmd.Cmd.CombinedOutput()
+// Output is part of the Command interface.
+func (cmd *cmdWrapper) Output() ([]byte, error) {
+	return cmd.CombinedOutput()
 }
 
 // OutputWithStdin is part of the Command interface.
@@ -64,7 +64,7 @@ func (cmd *cmdWrapper) OutputWithStdin(reader io.Reader) ([]byte, error) {
 		defer stdin.Close()
 		io.Copy(stdin, reader)
 	}()
-	return cmd.Cmd.CombinedOutput()
+	return cmd.CombinedOutput()
 }
 
 // WaitStdout is part of the Command interface.
