@@ -7,15 +7,20 @@ import (
 
 // Cli presents a cli API.
 type Cli interface {
+
 	// Command returns a Command instance which can be used to run a single command.
 	Command(cmd string, args ...string) Command
 }
 
 // Command presents cli command
 type Command interface {
+
 	// CombinedOutput runs the command and returns its combined standard
 	// output and standard error.
 	CombinedOutput() ([]byte, error)
+
+	//OutputWithStdin runs the command with user give reader and returns its combined standard
+	// output and standard error.
 	OutputWithStdin(io.Reader) ([]byte, error)
 }
 
@@ -38,18 +43,18 @@ type cmdWrapper struct {
 
 var _ Command = &cmdWrapper{}
 
-// CombinedOutput is part of the Cmd interface.
+// CombinedOutput is part of the Command interface.
 func (cmd *cmdWrapper) CombinedOutput() ([]byte, error) {
 	return cmd.Cmd.CombinedOutput()
 }
 
-// Command is part of the Interface interface.
+// OutputWithStdin is part of the Command interface.
+// The provided reader is used to command Stdin
 func (cmd *cmdWrapper) OutputWithStdin(reader io.Reader) ([]byte, error) {
 	stdin, err := cmd.Cmd.StdinPipe()
 	if err != nil {
 		return nil, err
 	}
-
 	go func() {
 		defer stdin.Close()
 		io.Copy(stdin, reader)
