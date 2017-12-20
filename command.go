@@ -2,6 +2,7 @@ package command
 
 import (
 	"io"
+	"log"
 	"os/exec"
 )
 
@@ -19,9 +20,14 @@ type Command interface {
 	// output and standard error.
 	CombinedOutput() ([]byte, error)
 
-	//OutputWithStdin runs the command with user give reader and returns its combined standard
+	// OutputWithStdin runs the command and returns its combined standard
 	// output and standard error.
+	// The provided reader is used to the command Stdin
 	OutputWithStdin(io.Reader) ([]byte, error)
+
+	//WaitStdout runs the command and returns its standard error.
+	// The provided writer is used to the command Stdout
+	WaitStdout(io.Writer) error
 }
 
 type command struct{}
@@ -49,9 +55,8 @@ func (cmd *cmdWrapper) CombinedOutput() ([]byte, error) {
 }
 
 // OutputWithStdin is part of the Command interface.
-// The provided reader is used to command Stdin
 func (cmd *cmdWrapper) OutputWithStdin(reader io.Reader) ([]byte, error) {
-	stdin, err := cmd.Cmd.StdinPipe()
+	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return nil, err
 	}
@@ -60,4 +65,20 @@ func (cmd *cmdWrapper) OutputWithStdin(reader io.Reader) ([]byte, error) {
 		io.Copy(stdin, reader)
 	}()
 	return cmd.Cmd.CombinedOutput()
+}
+
+// WaitStdout is part of the Command interface.
+func (cmd *cmdWrapper) WaitStdout(writer io.Writer) error {
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return err
+	}
+	if err := cmd.Start(); err != nil {
+		log.Fatal(err)
+	}
+
+	if _, err := io.Copy(writer, stdout); err != nil {
+		return err
+	}
+	return cmd.Wait()
 }

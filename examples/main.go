@@ -23,4 +23,13 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Println(string(bytes))
+
+	cmd = command.New().Command("echo", "test")
+	f, _ := os.Create("test.md")
+
+	err = cmd.WaitStdout(f)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println(string(bytes))
 }
